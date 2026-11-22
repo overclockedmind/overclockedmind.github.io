@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Solar Jetman Password Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #edf0f5;
+        --surface: #ffffff;
+        --surface-2: #e3e9f2;
+        --ink: #141b28;
+        --muted: #4c5a70;
+        --border: #c3cedd;
+        --accent: #bc4308;
+        --accent-ink: #ffffff;
+        --good: #0d7038;
+        --good-bg: #dff2e4;
+        --bad: #b3261e;
+        --bad-bg: #fbe3e1;
+        --screen: #101623;
+        --screen-ink: #ffc46b;
+        --screen-dim: #8d9bb5;
+        --focus: #1f6feb;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #070b14;
+          --surface: #101827;
+          --surface-2: #182238;
+          --ink: #e9eef7;
+          --muted: #9dafc9;
+          --border: #27354f;
+          --accent: #ffa04d;
+          --accent-ink: #1a1206;
+          --good: #5fd598;
+          --good-bg: #123526;
+          --bad: #ff9d94;
+          --bad-bg: #3d1a17;
+          --screen: #05080f;
+          --screen-ink: #ffc46b;
+          --screen-dim: #71809c;
+          --focus: #6cb2ff;
+        }
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.5;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-image:
+            radial-gradient(1px 1px at 12% 22%, rgba(255,255,255,.55) 50%, transparent 51%),
+            radial-gradient(1px 1px at 68% 8%, rgba(255,255,255,.4) 50%, transparent 51%),
+            radial-gradient(1.5px 1.5px at 84% 34%, rgba(255,255,255,.5) 50%, transparent 51%),
+            radial-gradient(1px 1px at 33% 64%, rgba(255,255,255,.35) 50%, transparent 51%),
+            radial-gradient(1px 1px at 52% 88%, rgba(255,255,255,.45) 50%, transparent 51%),
+            radial-gradient(1.5px 1.5px at 93% 76%, rgba(255,255,255,.3) 50%, transparent 51%),
+            radial-gradient(1px 1px at 5% 52%, rgba(255,255,255,.4) 50%, transparent 51%),
+            radial-gradient(1px 1px at 44% 40%, rgba(255,255,255,.3) 50%, transparent 51%);
+          background-attachment: fixed;
+        }
+      }
+      button, select, input { min-height: 2.75rem; }
+      :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+      .wrap { max-width: 880px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+
+      header { padding: 1rem 0 0.5rem; }
+      h1 {
+        font-family: "Chakra Petch", system-ui, sans-serif;
+        font-size: clamp(1.7rem, 5.5vw, 2.6rem);
+        line-height: 1.1;
+        margin: 0 0 0.5rem;
+        letter-spacing: 0.01em;
+      }
+      h1 .thin { color: var(--accent); }
+      .lede { color: var(--muted); max-width: 62ch; margin: 0; font-size: 1.02rem; }
+
+      section.panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.1rem 1.1rem 1.25rem;
+        margin-top: 1.25rem;
+      }
+      h2 {
+        font-family: "Chakra Petch", system-ui, sans-serif;
+        font-size: 1.25rem;
+        margin: 0 0 0.35rem;
+      }
+      .panel p.hint { color: var(--muted); margin: 0 0 0.9rem; font-size: 0.95rem; }
+      label.field-label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.35rem;
+      }
+
+      .pw-input {
+        width: 100%;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 1.35rem;
+        font-weight: 600;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        padding: 0.55rem 0.8rem;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--ink);
+      }
+      .pw-input[aria-invalid="true"] { border-color: var(--bad); }
+      .status { min-height: 1.5em; margin: 0.5rem 0 0; font-size: 0.95rem; }
+      .status.err { color: var(--bad); font-weight: 600; }
+      .status.ok { color: var(--good); font-weight: 600; }
+
+      .readout {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+        gap: 0.6rem;
+        margin: 0.9rem 0 0;
+      }
+      #readout[hidden], #r-bytes[hidden] { display: none; }
+      .stat {
+        background: var(--surface-2);
+        border-radius: 8px;
+        padding: 0.55rem 0.7rem 0.65rem;
+      }
+      .stat dt { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+      .stat dd { margin: 0.15rem 0 0; font-size: 1.08rem; font-weight: 700; font-family: "Chakra Petch", system-ui, sans-serif; }
+      .stat dd small { display: block; font-family: system-ui, sans-serif; font-weight: 500; font-size: 0.8rem; color: var(--muted); }
+      .badge {
+        display: inline-block;
+        padding: 0.1rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.92rem;
+      }
+      .badge.good { background: var(--good-bg); color: var(--good); }
+      .badge.bad { background: var(--bad-bg); color: var(--bad); }
+      .bytes-line {
+        margin: 0.8rem 0 0;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 0.88rem;
+        color: var(--muted);
+        word-break: break-all;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.9rem 1rem;
+      }
+      .controls select, .controls input[type="number"] {
+        width: 100%;
+        font-size: 1rem;
+        padding: 0.45rem 0.6rem;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--ink);
+      }
+      .seg { display: flex; gap: 0.4rem; }
+      .seg button {
+        flex: 1;
+        font: inherit;
+        font-weight: 600;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--muted);
+        cursor: pointer;
+        padding: 0.4rem 0.5rem;
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-ink);
+      }
+      .presets { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+      .presets button, .copy-btn {
+        font: inherit;
+        font-weight: 600;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface-2);
+        color: var(--ink);
+        cursor: pointer;
+        padding: 0.45rem 0.85rem;
+      }
+      .presets button:hover, .copy-btn:hover { border-color: var(--accent); }
+
+      .screen {
+        margin-top: 1.1rem;
+        background: var(--screen);
+        border-radius: 10px;
+        padding: 1rem 0.9rem 0.9rem;
+        text-align: center;
+      }
+      .screen .cap {
+        color: var(--screen-dim);
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin: 0 0 0.6rem;
+      }
+      .tiles {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.35rem 0.9rem;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+      }
+      .tiles .group { display: flex; gap: 0.35rem; }
+      .tile {
+        width: 2.35rem;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: var(--screen-ink);
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 6px;
+      }
+      .screen .actions { margin-top: 0.85rem; display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+      .copy-btn { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+      .copy-note { color: var(--screen-dim); font-size: 0.88rem; min-height: 1.4em; }
+
+      .layout-list { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+      .layout-list li { margin: 0.3rem 0; }
+      .layout-list code, p code {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 0.92em;
+        background: var(--surface-2);
+        padding: 0.05rem 0.35rem;
+        border-radius: 4px;
+      }
+      .fineprint { color: var(--muted); font-size: 0.92rem; }
+      footer {
+        margin-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        padding-top: 1rem;
+        color: var(--muted);
+        font-size: 0.93rem;
+      }
+      footer h2 { color: var(--ink); font-size: 1.05rem; }
+      footer ul { padding-left: 1.2rem; margin: 0.4rem 0; }
+      footer li { margin: 0.25rem 0; }
+      a { color: var(--accent); }
+      @media (max-width: 420px) {
+        .tile { width: 1.95rem; height: 2.6rem; font-size: 1.3rem; }
+        .tiles { gap: 0.3rem 0.55rem; }
+        .tiles .group { gap: 0.3rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Solar Jetman <span class="thin">Password Tool</span></h1>
+        <p class="lede">Decode any 12-letter Solar Jetman (NES) password to see exactly what it holds, then change the lives, score, pod, and gear and get a new password with a correct checksum - one the game will accept.</p>
+      </header>
+
+      <section class="panel" aria-labelledby="decode-h">
+        <h2 id="decode-h">1. Decode a password</h2>
+        <p class="hint">Type or paste a password. It is checked letter by letter against the game's alphabet and its checksum byte.</p>
+        <label class="field-label" for="pw">Password (12 letters)</label>
+        <input class="pw-input" id="pw" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="HLBQMQLBRVHB" maxlength="14" />
+        <p class="status" id="pw-status" role="status"></p>
+        <dl class="readout" id="readout" hidden>
+          <div class="stat"><dt>Planet</dt><dd id="r-planet">-</dd></div>
+          <div class="stat"><dt>Lives</dt><dd id="r-lives">-</dd></div>
+          <div class="stat"><dt>Score</dt><dd id="r-score">-</dd></div>
+          <div class="stat"><dt>Pod</dt><dd id="r-ship">-</dd></div>
+          <div class="stat"><dt>Mapping</dt><dd id="r-map">-</dd></div>
+          <div class="stat"><dt>Shield</dt><dd id="r-shield">-</dd></div>
+          <div class="stat"><dt>Thrusters</dt><dd id="r-thruster">-</dd></div>
+          <div class="stat"><dt>Checksum</dt><dd id="r-chk">-</dd></div>
+        </dl>
+        <p class="bytes-line" id="r-bytes" hidden></p>
+      </section>
+
+      <section class="panel" aria-labelledby="build-h">
+        <h2 id="build-h">2. Build your password</h2>
+        <p class="hint">Decoding a valid password loads its values here. Change anything and the new password updates live, checksum included.</p>
+        <div class="controls">
+          <div>
+            <label class="field-label" for="f-planet">Planet</label>
+            <select id="f-planet"></select>
+          </div>
+          <div>
+            <label class="field-label" for="f-lives">Lives (0-15)</label>
+            <select id="f-lives"></select>
+          </div>
+          <div>
+            <label class="field-label" for="f-score">Score (0-999999)</label>
+            <input type="number" id="f-score" min="0" max="999999" step="1" inputmode="numeric" value="0" />
+          </div>
+          <div>
+            <label class="field-label" for="f-ship">Pod</label>
+            <select id="f-ship">
+              <option value="0">Standard pod</option>
+              <option value="1">Nippon Sports</option>
+              <option value="2">Italian Racing</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label" for="f-map">Mapping device</label>
+            <select id="f-map">
+              <option value="0">None</option>
+              <option value="1">Mapping Device</option>
+              <option value="2">Super Mapping Device</option>
+              <option value="3">Super Mapping Device (both map bits)</option>
+            </select>
+          </div>
+          <div>
+            <span class="field-label" id="shield-label">Shield</span>
+            <div class="seg" role="group" aria-labelledby="shield-label">
+              <button type="button" id="f-shield-off" aria-pressed="true">Off</button>
+              <button type="button" id="f-shield-on" aria-pressed="false">On</button>
+            </div>
+          </div>
+          <div>
+            <span class="field-label" id="thruster-label">Thrusters</span>
+            <div class="seg" role="group" aria-labelledby="thruster-label">
+              <button type="button" id="f-thruster-off" aria-pressed="true">Off</button>
+              <button type="button" id="f-thruster-on" aria-pressed="false">On</button>
+            </div>
+          </div>
+        </div>
+        <div class="presets">
+          <button type="button" id="preset-example">Load example password</button>
+          <button type="button" id="preset-max">Max lives and score</button>
+          <button type="button" id="preset-super">Add Super Mapping Device</button>
+        </div>
+        <div class="screen" aria-live="polite">
+          <p class="cap">Your password</p>
+          <div class="tiles" id="tiles" aria-label="Generated password"></div>
+          <div class="actions">
+            <button type="button" class="copy-btn" id="copy-btn">Copy password</button>
+            <span class="copy-note" id="copy-note"></span>
+          </div>
+        </div>
+        <p class="fineprint" style="margin-top:0.9rem;">The two low bits of the planet byte hold the map flags, and published sources disagree on which bit is which. Bisqwit's generator reads the high bit alone as Super; the published Super Mapping Device password sets both bits. In game, the Super device shows items and wormholes as flashing dots on the map.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="how-h">
+        <h2 id="how-h">How the password works</h2>
+        <p class="hint">Twelve letters, each worth 4 bits from the alphabet <code>BDGHKLMNPQRTVWXZ</code>, pack into six bytes:</p>
+        <ul class="layout-list">
+          <li><strong>Lives</strong> - high half of byte 0 (0-15).</li>
+          <li><strong>Score</strong> - six decimal digits, one per nibble, scattered across bytes 0, 1, 4, and 5.</li>
+          <li><strong>Planet</strong> - top six bits of byte 2; the low two bits are the map flags.</li>
+          <li><strong>Pod, shield, thrusters</strong> - packed into byte 4 alongside the score's hundreds digit.</li>
+          <li><strong>Checksum</strong> - byte 3, computed from the other five bytes. Get it wrong and the game rejects the password, which is why hand-editing letters rarely works.</li>
+        </ul>
+      </section>
+
+      <footer>
+        <h2>Credits</h2>
+        <p>This tool is a derivative work. The password format, field layout, and checksum algorithm are not original research here:</p>
+        <ul>
+          <li><strong>Bisqwit (Joel Yliluoma)</strong> - Solar Jetman password codec (<a href="https://github.com/bisqwit/password_codecs">github.com/bisqwit/password_codecs</a>) and the TASVideos password generator. The checksum algorithm was solved by Bisqwit, with impulse from David Lawrence Ramsey.</li>
+          <li><strong>TNSe</strong> - original Solar Jetman password research, 2004, used by Bisqwit.</li>
+          <li><strong>retropass</strong> - field layout, citing Bisqwit and the CyberN Solar Jetman Password Generator.</li>
+          <li><strong>David Lawrence Ramsey</strong> - impulse and direction on the checksum, per Bisqwit.</li>
+        </ul>
+        <p>Any derivative work based on this tool must carry these credits. Solar Jetman is a trademark of its respective owners; this is an unofficial fan tool.</p>
+<h2>License</h2>
+        <p>This tool is released under the MIT License.</p>
+        <p>MIT License<br>
+        Copyright (c) 2026 Joshua Pickering (overclockedmind)</p>
+        <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+        <p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+        <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+      </footer>
+    </div>
+
+    <script>
+      // Solar Jetman (NES) password encoder / decoder - JavaScript port of
+      // the Python version, itself a translation of published work.
+      // Credits: Bisqwit (Joel Yliluoma), TNSe, David Lawrence Ramsey,
+      // retropass / CyberN. See the Credits section on this page.
+      var ALPH = "BDGHKLMNPQRTVWXZ";
+      var SHIP_NAMES = ["Standard pod", "Nippon Sports", "Italian Racing", "Unused (value 3)"];
+      var PLANET_NAMES = { 1: "Mexomorf", 3: "Omebru" };
+      var MAP_NAMES = {
+        0: "None",
+        1: "Mapping Device",
+        2: "Super Mapping Device",
+        3: "Super Mapping Device"
+      };
+
+      function pwToBytes(pw) {
+        var b = [0, 0, 0, 0, 0, 0];
+        for (var k = 0; k < pw.length; k++) {
+          b[k % 6] += ALPH.indexOf(pw.charAt(k)) << (4 - Math.floor(k / 6) * 4);
+        }
+        return b;
+      }
+
+      function checksum(b) {
+        var x = ((b[0] ^ b[1]) + b[2]) ^ b[4];
+        return (b[5] + Math.floor(x * 0x101 / 0x100)) & 0xFF;
+      }
+
+      function bytesToPw(b) {
+        var out = "";
+        for (var k = 0; k < 12; k++) {
+          out += ALPH.charAt((b[k % 6] >> (4 - Math.floor(k / 6) * 4)) & 15);
+        }
+        return out;
+      }
+
+      function decode(pw) {
+        var b = pwToBytes(pw);
+        var score = ((b[1] >> 4) & 15) + (b[1] & 15) * 10000 +
+                    ((b[5] >> 4) & 15) * 10 + (b[5] & 15) * 100000 +
+                    (b[0] & 15) * 1000 + ((b[4] >> 4) & 15) * 100;
+        return {
+          valid: b[3] === checksum(b),
+          score: score,
+          lives: (b[0] >> 4) & 15,
+          level0: (b[2] >> 2) & 63,
+          planet: ((b[2] >> 2) & 63) + 1,
+          mapBits: b[2] & 3,
+          ship: (b[4] >> 2) & 3,
+          shield: (b[4] >> 1) & 1,
+          thruster: b[4] & 1,
+          bytes: b
+        };
+      }
+
+      function encode(f) {
+        var b = [0, 0, 0, 0, 0, 0];
+        var s = Math.max(0, Math.min(999999, Math.floor(f.score) || 0));
+        b[0] = ((f.lives & 15) << 4) | (Math.floor(s / 1000) % 10);
+        b[1] = ((s % 10) << 4) | (Math.floor(s / 10000) % 10);
+        b[2] = ((f.level0 & 63) << 2) | (f.mapBits & 3);
+        b[5] = ((Math.floor(s / 10) % 10) << 4) | (Math.floor(s / 100000) % 10);
+        b[4] = ((Math.floor(s / 100) % 10) << 4) | ((f.ship & 3) << 2) |
+               ((f.shield & 1) << 1) | (f.thruster & 1);
+        b[3] = checksum(b);
+        return bytesToPw(b);
+      }
+
+      // ---- Builder state ----
+      var state = { lives: 3, score: 0, level0: 0, mapBits: 0, ship: 0, shield: 0, thruster: 0 };
+
+      var $ = function (id) { return document.getElementById(id); };
+      var planetSel = $("f-planet"), livesSel = $("f-lives");
+      var i, opt;
+      for (i = 1; i <= 13; i++) {
+        opt = document.createElement("option");
+        opt.value = String(i - 1);
+        opt.textContent = "Planet " + i + (PLANET_NAMES[i] ? " - " + PLANET_NAMES[i] : "");
+        planetSel.appendChild(opt);
+      }
+      for (i = 0; i <= 15; i++) {
+        opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = String(i);
+        livesSel.appendChild(opt);
+      }
+
+      function setSeg(prefix, val) {
+        $(prefix + "-off").setAttribute("aria-pressed", val ? "false" : "true");
+        $(prefix + "-on").setAttribute("aria-pressed", val ? "true" : "false");
+      }
+
+      function syncControls() {
+        planetSel.value = String(state.level0 <= 12 ? state.level0 : 0);
+        livesSel.value = String(state.lives);
+        $("f-score").value = String(state.score);
+        $("f-ship").value = String(state.ship);
+        $("f-map").value = String(state.mapBits);
+        setSeg("f-shield", state.shield);
+        setSeg("f-thruster", state.thruster);
+      }
+
+      var currentPw = "";
+      function renderOutput() {
+        currentPw = encode(state);
+        var tiles = $("tiles");
+        tiles.textContent = "";
+        for (var g = 0; g < 3; g++) {
+          var group = document.createElement("div");
+          group.className = "group";
+          for (var j = 0; j < 4; j++) {
+            var t = document.createElement("span");
+            t.className = "tile";
+            t.textContent = currentPw.charAt(g * 4 + j);
+            group.appendChild(t);
+          }
+          tiles.appendChild(group);
+        }
+        tiles.setAttribute("aria-label", "Generated password: " + currentPw);
+      }
+
+      function readControls() {
+        state.level0 = parseInt(planetSel.value, 10);
+        state.lives = parseInt(livesSel.value, 10);
+        var sc = parseInt($("f-score").value, 10);
+        state.score = isNaN(sc) ? 0 : Math.max(0, Math.min(999999, sc));
+        state.ship = parseInt($("f-ship").value, 10);
+        state.mapBits = parseInt($("f-map").value, 10);
+        renderOutput();
+      }
+
+      ["f-planet", "f-lives", "f-score", "f-ship", "f-map"].forEach(function (id) {
+        $(id).addEventListener("input", readControls);
+        $(id).addEventListener("change", readControls);
+      });
+      $("f-shield-off").addEventListener("click", function () { state.shield = 0; setSeg("f-shield", 0); renderOutput(); });
+      $("f-shield-on").addEventListener("click", function () { state.shield = 1; setSeg("f-shield", 1); renderOutput(); });
+      $("f-thruster-off").addEventListener("click", function () { state.thruster = 0; setSeg("f-thruster", 0); renderOutput(); });
+      $("f-thruster-on").addEventListener("click", function () { state.thruster = 1; setSeg("f-thruster", 1); renderOutput(); });
+
+      $("preset-example").addEventListener("click", function () {
+        var input = $("pw");
+        input.value = "HLBQMQLBRVHB";
+        input.dispatchEvent(new Event("input"));
+        input.focus();
+      });
+      $("preset-max").addEventListener("click", function () {
+        state.lives = 15; state.score = 999999;
+        syncControls(); renderOutput();
+      });
+      $("preset-super").addEventListener("click", function () {
+        state.mapBits = 3;
+        syncControls(); renderOutput();
+      });
+
+      $("copy-btn").addEventListener("click", function () {
+        var note = $("copy-note");
+        function done() { note.textContent = "Copied: " + currentPw; }
+        function fallback() {
+          var ta = document.createElement("textarea");
+          ta.value = currentPw;
+          ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand("copy"); done(); }
+          catch (e) { note.textContent = "Copy this password: " + currentPw; }
+          document.body.removeChild(ta);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(currentPw).then(done, fallback);
+        } else { fallback(); }
+      });
+
+      // ---- Decode ----
+      function fmtScore(n) {
+        return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      }
+      function bits2(n) { return (n & 2 ? "1" : "0") + (n & 1 ? "1" : "0"); }
+
+      $("pw").addEventListener("input", function () {
+        var input = $("pw");
+        var raw = input.value.toUpperCase().replace(/[\s-]/g, "");
+        var status = $("pw-status");
+        var readout = $("readout");
+        var bytesLine = $("r-bytes");
+
+        if (raw.length === 0) {
+          status.textContent = "";
+          status.className = "status";
+          input.removeAttribute("aria-invalid");
+          readout.hidden = true; bytesLine.hidden = true;
+          return;
+        }
+        var badChar = null;
+        for (var k = 0; k < raw.length; k++) {
+          if (ALPH.indexOf(raw.charAt(k)) === -1) { badChar = raw.charAt(k); break; }
+        }
+        if (badChar !== null) {
+          status.textContent = "\"" + badChar + "\" is not in the password alphabet (" + ALPH + ").";
+          status.className = "status err";
+          input.setAttribute("aria-invalid", "true");
+          readout.hidden = true; bytesLine.hidden = true;
+          return;
+        }
+        if (raw.length !== 12) {
+          status.textContent = raw.length + " of 12 letters - keep typing.";
+          status.className = "status";
+          input.removeAttribute("aria-invalid");
+          readout.hidden = true; bytesLine.hidden = true;
+          return;
+        }
+        input.removeAttribute("aria-invalid");
+        var d = decode(raw);
+        $("r-planet").innerHTML = "";
+        $("r-planet").appendChild(document.createTextNode("Planet " + d.planet));
+        if (PLANET_NAMES[d.planet]) {
+          var sm = document.createElement("small");
+          sm.textContent = PLANET_NAMES[d.planet];
+          $("r-planet").appendChild(sm);
+        }
+        $("r-lives").textContent = String(d.lives);
+        $("r-score").textContent = fmtScore(d.score);
+        $("r-ship").textContent = SHIP_NAMES[d.ship];
+        $("r-map").innerHTML = "";
+        $("r-map").appendChild(document.createTextNode(MAP_NAMES[d.mapBits]));
+        var msm = document.createElement("small");
+        msm.textContent = "map bits: " + bits2(d.mapBits);
+        $("r-map").appendChild(msm);
+        $("r-shield").textContent = d.shield ? "Yes" : "No";
+        $("r-thruster").textContent = d.thruster ? "Yes" : "No";
+        var chk = $("r-chk");
+        chk.innerHTML = "";
+        var badge = document.createElement("span");
+        badge.className = "badge " + (d.valid ? "good" : "bad");
+        badge.textContent = d.valid ? "Valid" : "Invalid";
+        chk.appendChild(badge);
+        bytesLine.textContent = "Bytes: " + d.bytes.map(function (x) {
+          return ("0" + x.toString(16)).slice(-2).toUpperCase();
+        }).join(" ") + "  (byte 3 is the checksum)";
+        readout.hidden = false; bytesLine.hidden = false;
+
+        if (d.valid) {
+          status.textContent = "Checksum valid - this password will load in game. Its values are now loaded into the builder below.";
+          status.className = "status ok";
+          state = { lives: d.lives, score: Math.min(999999, d.score), level0: d.level0, mapBits: d.mapBits, ship: d.ship, shield: d.shield, thruster: d.thruster };
+          syncControls(); renderOutput();
+        } else {
+          status.textContent = "Checksum invalid - the game would reject this password. Check for a mistyped letter.";
+          status.className = "status err";
+        }
+      });
+
+      syncControls();
+      renderOutput();
+    </script>
+  </body>
+</html>
